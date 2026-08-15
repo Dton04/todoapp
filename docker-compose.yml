@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mongodb:
@@ -14,11 +14,8 @@ services:
     container_name: mern-backend
     ports:
       - "8000:8000"
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/todo-app
-      - PORT=8000
-      - JWT_SECRET=BI_MAT
-      # You can add GMAIL_USERNAME and GMAIL_PASSWORD here if needed
+    env_file:
+      - ./backend/.env
     depends_on:
       - mongodb
 

@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+  # 1. DATABASE
   mongodb:
     image: mongo:latest
     container_name: mern-mongodb
@@ -10,6 +11,7 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  # 2. BACKEND API
   backend:
     build: ./backend
     container_name: mern-backend
@@ -23,6 +25,7 @@ services:
     depends_on:
       - mongodb
 
+  # 3. FRONTEND UI
   frontend:
     build: ./frontend
     container_name: mern-frontend
@@ -36,5 +39,73 @@ services:
     depends_on:
       - backend
 
+  # 4. HARDWARE MONITORING (CPU, RAM, Disk, Network)
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: mern-node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+
+  # 5. MONGODB DATABASE METRICS EXPORTER
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.40.0
+    container_name: mern-mongodb-exporter
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+    ports:
+      - "9216:9216"
+    depends_on:
+      - mongodb
+
+  # 6. PROMETHEUS SERVER
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    container_name: mern-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - node-exporter
+      - mongodb-exporter
+
+  # 7. GRAFANA DASHBOARDS
+  grafana:
+    image: grafana/grafana:10.3.3
+    container_name: mern-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+
 volumes:
   mongo-data:
+  prometheus-data:
+  grafana-data:

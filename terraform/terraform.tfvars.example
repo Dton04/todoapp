@@ -1,0 +1,12 @@
+# DigitalOcean Personal Access Token (Lấy từ DO Console -> API -> Generate New Token)
+do_token        = "dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Region (sgp1 = Singapore, nyc1 = New York, fra1 = Frankfurt, etc.)
+region          = "sgp1"
+
+# Droplet size (s-2vcpu-2gb = 2 vCPU, 2GB RAM; s-1vcpu-2gb = 1 vCPU, 2GB RAM; s-1vcpu-1gb = 1 vCPU, 1GB RAM)
+droplet_size    = "s-2vcpu-2gb"
+
+# Path to your local SSH public key
+public_key_path = "~/.ssh/id_rsa.pub"
+ssh_key_name    = "mern-todo-ssh-key"

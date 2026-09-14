@@ -1,0 +1,4 @@
+[vps]
+# DigitalOcean droplet default user is 'root'
+# Replace 123.45.67.89 with the public IP outputted from Terraform:
+123.45.67.89 ansible_user=root ansible_ssh_private_key_file=~/.ssh/id_rsa

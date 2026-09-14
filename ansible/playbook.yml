@@ -1,0 +1,80 @@
+---
+- name: Setup VPS and Deploy MERN Todo Application with Monitoring
+  hosts: vps
+  become: true
+  vars:
+    app_dir: "/app/todoapp"
+
+  tasks:
+    - name: 1. Update APT cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 2. Install prerequisite system packages
+      apt:
+        name:
+          - curl
+          - git
+          - ca-certificates
+          - gnupg
+          - lsb-release
+          - tar
+          - rsync
+        state: present
+
+    - name: 3. Check if Docker is installed
+      command: docker --version
+      register: docker_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: 4. Install Docker CE and Docker Compose via official script if not present
+      shell: curl -fsSL https://get.docker.com | sh
+      when: docker_installed.rc != 0
+
+    - name: 5. Ensure Docker service is running and enabled on boot
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: 6. Create application directory on VPS
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: 7. Copy project files to VPS (Docker Compose & Configurations)
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ app_dir }}/{{ item.dest }}"
+        mode: '0755'
+      loop:
+        - { src: "../docker-compose.yml", dest: "docker-compose.yml" }
+        - { src: "../docker-compose.monitoring.yml", dest: "docker-compose.monitoring.yml" }
+        - { src: "../backend", dest: "" }
+        - { src: "../frontend", dest: "" }
+        - { src: "../prometheus", dest: "" }
+        - { src: "../grafana", dest: "" }
+
+    - name: 8. Build and launch all application and monitoring containers
+      shell: |
+        docker compose -f docker-compose.yml -f docker-compose.monitoring.yml down --remove-orphans || true
+        docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d --build
+      args:
+        chdir: "{{ app_dir }}"
+      register: compose_output
+
+    - name: 9. Display Docker Compose status
+      debug:
+        var: compose_output.stdout_lines
+
+    - name: 10. Check list of running containers
+      command: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+      register: docker_ps_output
+      changed_when: false
+
+    - name: 11. Print running containers
+      debug:
+        var: docker_ps_output.stdout_lines

@@ -1,23 +1,72 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-node_modules
-/backend/.env
-/.pnp
+# ==========================================
+# 1. DEPENDENCIES & PACKAGES
+# ==========================================
+node_modules/
+*/node_modules/
+.pnp
 .pnp.js
-# testing
-/coverage
 
-# production
-/build
+# ==========================================
+# 2. ENVIRONMENT & SECRETS
+# ==========================================
+.env
+.env.*
+!.env.example
+!*.env.example
+backend/.env
+frontend/.env
+*.pem
+*.key
+*.pub
+id_rsa
+keygen
 
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# ==========================================
+# 3. TERRAFORM SENSITIVE FILES
+# ==========================================
+# Local .terraform directories
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
 
+# Sensitive variables (contains DigitalOcean / Cloud API Tokens)
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Terraform execution and crash logs
+crash.log
+crash.*.log
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.rc
+terraform.rc
+
+# ==========================================
+# 4. ANSIBLE SENSITIVE FILES
+# ==========================================
+ansible/hosts.ini
+*.retry
+
+# ==========================================
+# 5. BUILD & PRODUCTION ARTIFACTS
+# ==========================================
+build/
+dist/
+coverage/
+
+# ==========================================
+# 6. LOGS & OS MISC
+# ==========================================
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

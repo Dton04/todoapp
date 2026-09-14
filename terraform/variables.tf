@@ -1,5 +1,5 @@
 variable "do_token" {
-  description = "DigitalOcean Personal Access Token (Lấy từ DigitalOcean -> API -> Generate New Token)"
+  description = "DigitalOcean Personal Access Token"
   type        = string
   sensitive   = true
 }
@@ -11,9 +11,9 @@ variable "region" {
 }
 
 variable "droplet_size" {
-  description = "Droplet plan size (s-2vcpu-2gb = 2 vCPU, 2GB RAM; s-1vcpu-2gb = 1 vCPU, 2GB RAM; s-1vcpu-1gb = 1 vCPU, 1GB RAM)"
+  description = "Droplet plan size: 1CPU/1RAM (s-1vcpu-1gb)"
   type        = string
-  default     = "s-2vcpu-2gb"
+  default     = "s-1vcpu-1gb"
 }
 
 variable "ubuntu_image" {

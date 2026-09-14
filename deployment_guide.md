@@ -1,56 +1,30 @@
 # HƯỚNG DẪN CHẠY ANSIBLE DEPLOY LÊN VPS DIGITALOCEAN
 
-VPS của bạn đã được tạo thành công với IP: **`178.128.111.160`**!
+VPS mới (1CPU/1RAM) đã được tạo thành công với IP: **`206.189.92.243`**!
 
 ---
 
-## 1. Các file Ansible đã được chuẩn bị sẵn:
-1. [ansible/hosts.ini](file:///e:/CODE/CYBERSOFT_D/mern-todo-app/mern-todo-app/ansible/hosts.ini): Đã điền sẵn IP `178.128.111.160` và SSH Key `~/.ssh/keygen`.
-2. [ansible/playbook.yml](file:///e:/CODE/CYBERSOFT_D/mern-todo-app/mern-todo-app/ansible/playbook.yml): Tự động cài đặt Docker, Docker Compose, copy toàn bộ source code lên VPS và khởi chạy toàn bộ 7 container (Frontend, Backend, MongoDB, Prometheus, Grafana, Node Exporter, MongoDB Exporter).
+## 1. File cấu hình Ansible:
+- [ansible/hosts.ini](file:///e:/CODE/CYBERSOFT_D/mern-todo-app/mern-todo-app/ansible/hosts.ini): Đã cập nhật IP `206.189.92.243`.
 
 ---
 
-## 2. Cách chạy Ansible Playbook
+## 2. Lệnh chạy Ansible Deploy (PowerShell):
 
-### Cách 1: Chạy qua Container `ubuntu-ansible` trong Docker Desktop (Khuyên dùng nếu dùng Windows)
-
-1. Mở PowerShell ở máy thật và copy thư mục dự án cùng SSH Key vào container:
-   ```powershell
-   docker cp "E:\CODE\CYBERSOFT_D\mern-todo-app\mern-todo-app" ubuntu-ansible:/root/
-   docker cp "C:\Users\ACER\.ssh" ubuntu-ansible:/root/
-   ```
-
-2. Vào tab **Exec** của container `ubuntu-ansible` (trên Docker Desktop) và chạy:
-   ```bash
-   # Phân quyền cho SSH key (bắt buộc)
-   chmod 600 /root/.ssh/keygen
-
-   # Cài đặt ansible (nếu chưa có)
-   apt update && apt install -y ansible
-
-   # Di chuyển vào thư mục ansible và chạy deploy
-   cd /root/mern-todo-app/ansible
-   ansible-playbook -i hosts.ini playbook.yml
-   ```
-
----
-
-### Cách 2: Chạy trực tiếp từ WSL (Ubuntu trên Windows)
-
-Nếu bạn có cài WSL:
-```bash
-cd /mnt/e/CODE/CYBERSOFT_D/mern-todo-app/mern-todo-app/ansible
-chmod 600 ~/.ssh/keygen
-ansible-playbook -i hosts.ini playbook.yml
+```powershell
+docker run --rm -it `
+  -e ANSIBLE_CONFIG=/workspace/ansible/ansible.cfg `
+  -v "${PWD}:/workspace" `
+  -v "$HOME/.ssh:/tmp/ssh_keys:ro" `
+  -w /workspace/ansible `
+  cytopia/ansible:latest-tools `
+  sh -c "mkdir -p /root/.ssh && chmod 700 /root/.ssh && cp /tmp/ssh_keys/keygen /root/.ssh/keygen && chmod 600 /root/.ssh/keygen && ansible-playbook -i hosts.ini playbook.yml"
 ```
 
 ---
 
-## 3. Kiểm tra kết quả sau khi Ansible chạy xong:
-
-| Ứng dụng / Dịch vụ | Địa chỉ truy cập | Ghi chú |
-| :--- | :--- | :--- |
-| **Frontend Web UI** | `http://178.128.111.160:3000` | Todo App React |
-| **Backend REST API** | `http://178.128.111.160:8000` | Node.js Express API |
-| **Grafana Dashboard** | `http://178.128.111.160:3001` | User: `admin` / Password: `admin` |
-| **Prometheus Explorer** | `http://178.128.111.160:9090` | Metrics Scraper |
+## 3. Đường link truy cập sau khi deploy:
+* **Frontend:** http://206.189.92.243:3000
+* **Backend API:** http://206.189.92.243:8000
+* **Grafana Dashboard:** http://206.189.92.243:3001 *(User: `admin` / Pass: `admin`)*
+* **Prometheus:** http://206.189.92.243:9090

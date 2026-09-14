@@ -1,80 +1,79 @@
 ---
-- name: Setup VPS and Deploy MERN Todo Application with Monitoring
+- name: Setup VPS, Install Docker & Deploy Git Project
   hosts: vps
   become: true
   vars:
+    git_repo_url: "https://github.com/Dton04/todoapp.git"
     app_dir: "/app/todoapp"
 
   tasks:
-    - name: 1. Update APT cache
+    - name: 1. Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: 2. Install prerequisite system packages
+    - name: 2. Install Git and prerequisite tools
       apt:
         name:
-          - curl
           - git
+          - curl
           - ca-certificates
           - gnupg
           - lsb-release
-          - tar
-          - rsync
         state: present
 
-    - name: 3. Check if Docker is installed
-      command: docker --version
-      register: docker_installed
-      ignore_errors: true
+    - name: 3. Setup 2GB Swap (Dam bao VPS 1CPU/1GB RAM build khong bi tran RAM)
+      shell: |
+        if [ ! -f /swapfile ]; then
+          fallocate -l 2G /swapfile
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+          echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        fi
       changed_when: false
 
-    - name: 4. Install Docker CE and Docker Compose via official script if not present
+    - name: 4. Install Docker & Docker Compose via official script
       shell: curl -fsSL https://get.docker.com | sh
-      when: docker_installed.rc != 0
+      args:
+        creates: /usr/bin/docker
 
-    - name: 5. Ensure Docker service is running and enabled on boot
+    - name: 5. Ensure Docker service is active and enabled
       service:
         name: docker
         state: started
         enabled: yes
 
-    - name: 6. Create application directory on VPS
-      file:
-        path: "{{ app_dir }}"
-        state: directory
-        mode: '0755'
+    - name: 6. Clone source code from Git to VPS directory
+      git:
+        repo: "{{ git_repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
 
-    - name: 7. Copy project files to VPS (Docker Compose & Configurations)
+    - name: 7. Ensure backend .env exists
       copy:
-        src: "{{ item.src }}"
-        dest: "{{ app_dir }}/{{ item.dest }}"
-        mode: '0755'
-      loop:
-        - { src: "../docker-compose.yml", dest: "docker-compose.yml" }
-        - { src: "../docker-compose.monitoring.yml", dest: "docker-compose.monitoring.yml" }
-        - { src: "../backend", dest: "" }
-        - { src: "../frontend", dest: "" }
-        - { src: "../prometheus", dest: "" }
-        - { src: "../grafana", dest: "" }
+        src: "{{ app_dir }}/backend/.env.example"
+        dest: "{{ app_dir }}/backend/.env"
+        remote_src: yes
+        force: no
 
-    - name: 8. Build and launch all application and monitoring containers
+    - name: 8. Truy cap thu muc vua clone va dung docker-compose build source
       shell: |
-        docker compose -f docker-compose.yml -f docker-compose.monitoring.yml down --remove-orphans || true
-        docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d --build
+        docker compose up -d --build
       args:
         chdir: "{{ app_dir }}"
       register: compose_output
 
-    - name: 9. Display Docker Compose status
+    - name: 9. Display build and deploy results
       debug:
         var: compose_output.stdout_lines
 
     - name: 10. Check list of running containers
-      command: docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+      command: docker ps
       register: docker_ps_output
       changed_when: false
 
-    - name: 11. Print running containers
+    - name: 11. Print active containers
       debug:
         var: docker_ps_output.stdout_lines

@@ -8,9 +8,33 @@ on:
 
 jobs:
   # ==========================================
-  # 1. TEST BACKEND & FRONTEND (CHẠY SONG SONG)
+  # 0. PHÁT HIỆN THAY ĐỔI (PATH FILTERING)
+  # ==========================================
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check which folder changed
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  # ==========================================
+  # 1. TEST BACKEND (Chỉ chạy khi có sửa đổi ở backend/)
   # ==========================================
   test-backend:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -29,7 +53,12 @@ jobs:
           npm ci
           # npm test
 
+  # ==========================================
+  # 2. TEST FRONTEND (Chỉ chạy khi có sửa đổi ở frontend/)
+  # ==========================================
   test-frontend:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -49,12 +78,12 @@ jobs:
           # npm test -- --watchAll=false
 
   # ==========================================
-  # 2. BUILD & PUSH DOCKER IMAGES (CHẠY SONG SONG)
+  # 3. BUILD & PUSH BACKEND (Chỉ chạy khi sửa backend)
   # ==========================================
   build-backend:
-    needs: test-backend
+    needs: [detect-changes, test-backend]
+    if: ${{ needs.detect-changes.outputs.backend == 'true' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -79,10 +108,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ==========================================
+  # 4. BUILD & PUSH FRONTEND (Chỉ chạy khi sửa frontend)
+  # ==========================================
   build-frontend:
-    needs: test-frontend
+    needs: [detect-changes, test-frontend]
+    if: ${{ needs.detect-changes.outputs.frontend == 'true' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -108,12 +140,17 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ==========================================
-  # 3. DEPLOY TO SERVER
+  # 5. DEPLOY TO SERVER (Chạy khi có bất kỳ thay đổi nào)
   # ==========================================
   deploy:
-    needs: [build-backend, build-frontend]
+    needs: [detect-changes, build-backend, build-frontend]
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      (needs.detect-changes.outputs.backend == 'true' || needs.detect-changes.outputs.frontend == 'true')
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3

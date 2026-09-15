@@ -1,23 +1,23 @@
 version: "3.8"
 
 services:
-  # 1. DATABASE
+  # 1. DATABASE (Chi mo noi bo 127.0.0.1)
   mongodb:
     image: mongo:latest
     container_name: mern-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo-data:/data/db
 
-  # 2. BACKEND API
+  # 2. BACKEND API (Chi mo cho Nginx 127.0.0.1:8000)
   backend:
     build: ./backend
     container_name: mern-backend
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - MONGO_URI=mongodb://mongodb:27017/todo-app
       - PORT=8000
@@ -25,13 +25,13 @@ services:
     depends_on:
       - mongodb
 
-  # 3. FRONTEND UI
+  # 3. FRONTEND UI (Chi mo cho Nginx 127.0.0.1:3000)
   frontend:
     build: ./frontend
     container_name: mern-frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - CHOKIDAR_USEPOLLING=true
     stdin_open: true
@@ -54,7 +54,7 @@ services:
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     ports:
-      - "9100:9100"
+      - "127.0.0.1:9100:9100"
 
   # 5. MONGODB DATABASE METRICS EXPORTER
   mongodb-exporter:
@@ -64,7 +64,7 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongodb:27017
     ports:
-      - "9216:9216"
+      - "127.0.0.1:9216:9216"
     depends_on:
       - mongodb
 
@@ -83,12 +83,12 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     depends_on:
       - node-exporter
       - mongodb-exporter
 
-  # 7. GRAFANA DASHBOARDS
+  # 7. GRAFANA DASHBOARDS (Chi mo cho Nginx 127.0.0.1:3001)
   grafana:
     image: grafana/grafana:10.3.3
     container_name: mern-grafana
@@ -101,7 +101,7 @@ services:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - grafana-data:/var/lib/grafana
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     depends_on:
       - prometheus
 

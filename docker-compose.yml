@@ -68,7 +68,7 @@ services:
     depends_on:
       - mongodb
 
-  # 6. PROMETHEUS SERVER
+  # 6. PROMETHEUS SERVER (Mo cong 9090 ra ngoai de truy cap truc tiep)
   prometheus:
     image: prom/prometheus:v2.49.1
     container_name: mern-prometheus
@@ -83,7 +83,7 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
     ports:
-      - "127.0.0.1:9090:9090"
+      - "9090:9090"
     depends_on:
       - node-exporter
       - mongodb-exporter

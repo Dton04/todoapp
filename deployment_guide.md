@@ -1,4 +1,3 @@
-# HƯỚNG DẪN CHẠY ANSIBLE DEPLOY LÊN VPS DIGITALOCEAN
 
 VPS mới (1CPU/1RAM) đã được tạo thành công với IP: **`206.189.92.243`**!
 
@@ -6,7 +5,7 @@ VPS mới (1CPU/1RAM) đã được tạo thành công với IP: **`206.189.92.2
 
 ## 1. File cấu hình Ansible:
 - [ansible/hosts.ini](file:///e:/CODE/CYBERSOFT_D/mern-todo-app/mern-todo-app/ansible/hosts.ini): Đã cập nhật IP `206.189.92.243`.
-
+- terraform apply
 ---
 
 ## 2. Lệnh chạy Ansible Deploy (PowerShell):
@@ -28,3 +27,52 @@ docker run --rm -it `
 * **Backend API:** http://206.189.92.243:8000
 * **Grafana Dashboard:** http://206.189.92.243:3001 *(User: `admin` / Pass: `admin`)*
 * **Prometheus:** http://206.189.92.243:9090
+
+
+
+
+
+
+
+
+
+### Map DOMAIN
+apt update
+apt install -y nginx certbot python3-certbot-nginx
+
+nano /etc/nginx/sites-available/todoapp
+
+#Frontend
+server {
+    listen 80;
+    server_name tondat.online www.tondat.online;
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+#Backend
+server {
+    listen 80;
+    server_name api.tondat.online;
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+#Grafana
+server {
+    listen 80;
+    server_name grafana.tondat.online;
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_set_header Host $host;
+    }
+}

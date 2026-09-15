@@ -21,12 +21,10 @@ pipeline {
                     echo 'Testing Backend...'
                     dir('backend') {
                         sh 'npm install'
-                        // sh 'npm test' // Uncomment if you have tests configured
                     }
                     echo 'Testing Frontend...'
                     dir('frontend') {
                         sh 'npm install'
-                        // sh 'npm test' // Uncomment if you have tests configured
                     }
                 }
             }

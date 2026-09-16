@@ -76,3 +76,13 @@ server {
         proxy_set_header Host $host;
     }
 }
+
+
+
+
+
+ln -sf /etc/nginx/sites-available/todoapp /etc/nginx/sites-enabled/
+
+systemctl restart nginx
+
+certbot --nginx -d tondat.online -d www.tondat.online -d api.tondat.online -d grafana.tondat.online --non-interactive --agree-tos -m tandat081104@gmail.com

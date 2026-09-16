@@ -1,8 +1,22 @@
 import axios from "axios";
 
-// Tự động nhận diện host đang chạy (localhost hoặc IP VPS) kèm port 8000
-const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
-const baseURL = process.env.REACT_APP_API_URL || `http://${host}:8000/api`;
+// Tu dong nhan dien moi truong (Localhost, Domain HTTPS hoac IP VPS)
+let baseURL = process.env.REACT_APP_API_URL;
+
+if (!baseURL) {
+    if (typeof window !== "undefined") {
+        const { protocol, hostname } = window.location;
+        if (hostname === "localhost" || hostname === "127.0.0.1") {
+            baseURL = "http://localhost:8000/api";
+        } else if (hostname.endsWith("tondat.online")) {
+            baseURL = "https://api.tondat.online/api";
+        } else {
+            baseURL = `${protocol}//${hostname}:8000/api`;
+        }
+    } else {
+        baseURL = "http://localhost:8000/api";
+    }
+}
 
 const instance = axios.create({
     baseURL: baseURL

@@ -1,13 +1,13 @@
 version: "3.8"
 
 services:
-  # 1. DATABASE (Chi mo noi bo 127.0.0.1)
+  # 1. DATABASE (mo network)
   mongodb:
     image: mongo:latest
     container_name: mern-mongodb
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:27017:27017"
+    # ports:
+    #   - "127.0.0.1:27017:27017"
     volumes:
       - mongo-data:/data/db
 
